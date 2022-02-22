@@ -1,6 +1,8 @@
 // ignore_for_file: file_names
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -9,6 +11,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  /* Listview
   List _itens = [];
   void _carregarItens() {
     _itens = [];
@@ -18,17 +21,49 @@ class _HomeState extends State<Home> {
       item["descricao"] = "Descricao $i Lorem Ipsum dolor sit amet.";
       _itens.add(item);
     }
+  }*/
+
+  Future<Map> _recuperarPreco() async {
+    var url = Uri.parse('https://blockchain.info/ticker');
+    http.Response response = await http.get(url);
+    return json.decode(response.body);
   }
 
   @override
   Widget build(BuildContext context) {
-    _carregarItens();
+    // _carregarItens();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Compilado de Assuntos Flutter"),
-      ),
-      body: Container(
+    return FutureBuilder<Map>(
+        future: _recuperarPreco(),
+        builder: (context, snapshot) {
+          String resultado = "";
+
+          switch (snapshot.connectionState) {
+            case ConnectionState.none:
+              break;
+            case ConnectionState.waiting:
+              print("Conexão waiting");
+              resultado = "Carregando...";
+              break;
+            case ConnectionState.active:
+              break;
+            case ConnectionState.done:
+              print("Conexão done");
+              if (snapshot.hasError) {
+                resultado = "Erro ao carregar os dados";
+              } else {
+                var valor = snapshot.data!["BRL"]["buy"];
+                resultado = "Preço do bitcoin: ${valor.toString()}";
+              }
+              break;
+          }
+          return Center(
+            child: Text(resultado),
+          );
+        });
+
+    /* LIST VIEW, EVENTOS DE CLIQUE E DIALOG (ALERTDIALOG)
+      Container(
         padding: const EdgeInsets.all(20),
         child: ListView.builder(
             itemCount: _itens.length,
@@ -72,7 +107,6 @@ class _HomeState extends State<Home> {
                 subtitle: Text("${_itens[indice]['descricao']}"),
               );
             }),
-      ),
-    );
+      ), */
   }
 }
