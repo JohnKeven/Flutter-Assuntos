@@ -32,7 +32,7 @@ class _HomeState extends State<Home> {
     return json.decode(response.body);
   }
 */
-  String _urlBase = "https://jsonplaceholder.typicode.com";
+  final String _urlBase = "https://jsonplaceholder.typicode.com";
 
   Future<List<Post>> _recuperarPostagens() async {
     http.Response response = await http.get(Uri.parse(_urlBase + "/posts"));
@@ -45,45 +45,132 @@ class _HomeState extends State<Home> {
     return postagens;
   }
 
+  _post() async {
+    var postagem = json.encode({
+      "userId": 120,
+      "id": 3,
+      "title": "Titulo Alterado",
+      "body": "Postagem Alterada"
+    });
+
+    http.Response response = await http.post(
+      Uri.parse(_urlBase + "/posts"),
+      headers: {"Content-type": "application/json; charset=UTF-8"},
+      body: postagem,
+    );
+
+    print("Resposta: ${response.statusCode}");
+    print("Resposta: ${response.body}");
+  }
+
+  _put() async {
+    var postagem = json.encode({
+      "userId": 120,
+      "id": null,
+      "title": "Titulo Alterado",
+      "body": "Postagem Alterada"
+    });
+    http.Response response = await http.put(
+      Uri.parse(_urlBase + "/posts/2"),
+      headers: {"Content-type": "application/json; charset=UTF-8"},
+      body: postagem,
+    );
+    print("Resposta: ${response.statusCode}");
+    print("Resposta: ${response.body}");
+  }
+
+  _patch() async {
+    var postagem = json.encode(
+      {
+        "userId": 130,
+        "body": "Postagem Alterada",
+      },
+    );
+    http.Response response = await http.patch(
+      Uri.parse(_urlBase + "/posts/2"),
+      headers: {"Content-type": "application/json; charset=UTF-8"},
+      body: postagem,
+    );
+    print("Resposta: ${response.statusCode}");
+    print("Resposta: ${response.body}");
+  }
+
+  _delete() async {
+    http.Response response =
+        await http.delete(Uri.parse(_urlBase + "/posts/2"));
+    if (response.statusCode.toString() == "200") {
+      print("Deletado com Sucesso");
+    } else {
+      print("Erro ao deletar");
+    }
+    print("Resposta: ${response.statusCode}");
+    print("Resposta: ${response.body}");
+  }
+
   @override
   Widget build(BuildContext context) {
     // _carregarItens();
 
     return Scaffold(
-        appBar: AppBar(),
-        body: FutureBuilder<List<Post>>(
-            future: _recuperarPostagens(),
-            builder: (context, snapshot) {
-              switch (snapshot.connectionState) {
-                case ConnectionState.none:
-                  break;
-                case ConnectionState.waiting:
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                case ConnectionState.active:
-                  break;
-                case ConnectionState.done:
-                  if (snapshot.hasError) {
-                    print("Erro ao Carregar");
-                  } else {
-                    print("Carregou!");
-                    return ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        List<Post> lista = snapshot.data!;
-                        Post post = lista[index];
-                        return ListTile(
-                          title: Text(post.title),
-                          subtitle: Text(post.id.toString()),
+      appBar: AppBar(),
+      body: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: _post,
+                  child: const Text("Salvar"),
+                ),
+                ElevatedButton(
+                  onPressed: _patch,
+                  child: const Text("Atualizar"),
+                ),
+                ElevatedButton(
+                  onPressed: _delete,
+                  child: const Text("Deletar"),
+                ),
+              ],
+            ),
+            Expanded(
+              child: FutureBuilder<List<Post>>(
+                  future: _recuperarPostagens(),
+                  builder: (context, snapshot) {
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.none:
+                        break;
+                      case ConnectionState.waiting:
+                        return const Center(
+                          child: CircularProgressIndicator(),
                         );
-                      },
-                    );
-                  }
-                  break;
-              }
-              return const Center(child: Text(" "));
-            }));
+                      case ConnectionState.active:
+                        break;
+                      case ConnectionState.done:
+                        if (snapshot.hasError) {
+                          print("Erro ao Carregar");
+                        } else {
+                          return ListView.builder(
+                            itemCount: snapshot.data!.length,
+                            itemBuilder: (context, index) {
+                              List<Post> lista = snapshot.data!;
+                              Post post = lista[index];
+                              return ListTile(
+                                title: Text(post.title),
+                                subtitle: Text(post.id.toString()),
+                              );
+                            },
+                          );
+                        }
+                        break;
+                    }
+                    return const Center(child: Text(" "));
+                  }),
+            ),
+          ],
+        ),
+      ),
+    );
 
     /* FutureBuilder<Map>(
         future: _recuperarPreco(),
